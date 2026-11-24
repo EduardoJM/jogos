@@ -16,5 +16,7 @@ export default function Cover({
       </div>
     );
   }
-  return <img src={src} alt={`Capa de ${title}`} className={className} loading="lazy" />;
+  // <img> não recebe o basePath automaticamente; prefixa caminhos locais (ex: /capas/...).
+  const url = src.startsWith("/") ? `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}${src}` : src;
+  return <img src={url} alt={`Capa de ${title}`} className={className} loading="lazy" />;
 }
