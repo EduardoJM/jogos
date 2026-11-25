@@ -71,4 +71,4 @@ export async function getGame(slug: string): Promise<Game> {
   return { ...toMeta(slug, data), contentHtml: processed.toString() };
 }
 
-export { formatDate } from "./format";
+export { formatDate, formatNumber } from "./format";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getGame, getGameSlugs, formatDate } from "@/lib/games";
+import { getGame, getGameSlugs, formatDate, formatNumber } from "@/lib/games";
 import StatusBadge from "@/app/StatusBadge";
 import Cover from "@/app/Cover";
 
@@ -35,7 +35,7 @@ export default async function GamePage({ params }: Props) {
         {game.emulator && (<><dt>Emulador</dt><dd>{game.emulator}</dd></>)}
         <dt>Status</dt><dd><StatusBadge status={game.status} /></dd>
         {game.rating !== undefined && (<><dt>Nota</dt><dd>{game.rating}/10</dd></>)}
-        {game.hours !== undefined && (<><dt>Horas</dt><dd>{game.hours}h</dd></>)}
+        {game.hours !== undefined && (<><dt>Horas</dt><dd>{formatNumber(game.hours)}h</dd></>)}
         {game.finishedAt && (<><dt>Finalizado em</dt><dd>{formatDate(game.finishedAt)}</dd></>)}
         {game.genres.length > 0 && (<><dt>Gêneros</dt><dd>{game.genres.join(", ")}</dd></>)}
       </dl>

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ImageResponse } from "next/og";
-import { getAllGames } from "@/lib/games";
+import { getAllGames, formatNumber } from "@/lib/games";
 
 // Imagem de compartilhamento (Open Graph), gerada no build com os números reais da coleção.
 // Fica em /og.png: com extensão, o GitHub Pages serve como image/png.
@@ -59,7 +59,7 @@ export function GET() {
                   background: "#181b21", border: "1px solid #2a2e36",
                 }}
               >
-                <div style={{ display: "flex", fontSize: 48, color: "#a78bfa" }}>{s.value}</div>
+                <div style={{ display: "flex", fontSize: 48, color: "#a78bfa" }}>{formatNumber(s.value)}</div>
                 <div style={{ display: "flex", fontSize: 22, color: "#9aa0a6" }}>{s.label}</div>
               </div>
             ))}

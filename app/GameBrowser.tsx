@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { GameMeta } from "@/lib/games";
-import { formatDate } from "@/lib/format";
+import type { GameMeta, GameStatus } from "@/lib/games";
+import { formatDate, formatNumber } from "@/lib/format";
 import StatusBadge from "./StatusBadge";
 import Cover from "./Cover";
 
@@ -11,8 +11,11 @@ const ALL = "todos";
 const NO_DATE = "sem-data";
 
 type Option = { value: string; label: string };
-type Filters = { ano: string; plataforma: string };
-const PARAMS = ["ano", "plataforma"] as const;
+type Filters = { ano: string; plataforma: string; status: string };
+const PARAMS = ["ano", "plataforma", "status"] as const;
+
+// Ordem fixa de exibição dos status nos filtros.
+const STATUS_ORDER: GameStatus[] = ["jogando", "zerado", "platinado", "abandonado"];
 
 function uniqueSorted(values: string[], desc = false) {
   const sorted = Array.from(new Set(values)).sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -20,11 +23,12 @@ function uniqueSorted(values: string[], desc = false) {
 }
 
 export default function GameBrowser({ games }: { games: GameMeta[] }) {
-  const [filters, setFilters] = useState<Filters>({ ano: ALL, plataforma: ALL });
+  const [filters, setFilters] = useState<Filters>({ ano: ALL, plataforma: ALL, status: ALL });
 
   const options = useMemo<Record<keyof Filters, Option[]>>(() => {
     const years = uniqueSorted(games.flatMap((g) => (g.finishedAt ? [g.finishedAt.slice(0, 4)] : [])), true);
     const platforms = uniqueSorted(games.map((g) => g.platform));
+    const statuses = STATUS_ORDER.filter((s) => games.some((g) => g.status === s));
     return {
       ano: [
         { value: ALL, label: "Todos" },
@@ -32,10 +36,14 @@ export default function GameBrowser({ games }: { games: GameMeta[] }) {
         ...(games.some((g) => !g.finishedAt) ? [{ value: NO_DATE, label: "Sem data" }] : []),
       ],
       plataforma: [{ value: ALL, label: "Todas" }, ...platforms.map((p) => ({ value: p, label: p }))],
+      status: [
+        { value: ALL, label: "Todos" },
+        ...statuses.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
+      ],
     };
   }, [games]);
 
-  // Lê ?ano= e ?plataforma= da URL ao carregar (o site é estático, então isso só acontece no navegador).
+  // Lê ?ano=, ?plataforma= e ?status= da URL ao carregar (o site é estático, então isso só acontece no navegador).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const fromUrl: Partial<Filters> = {};
@@ -56,8 +64,9 @@ export default function GameBrowser({ games }: { games: GameMeta[] }) {
   }
 
   const filtered = games.filter((g) => {
-    const { ano, plataforma } = filters;
+    const { ano, plataforma, status } = filters;
     if (plataforma !== ALL && g.platform !== plataforma) return false;
+    if (status !== ALL && g.status !== status) return false;
     if (ano === NO_DATE) return !g.finishedAt;
     if (ano !== ALL) return g.finishedAt?.startsWith(ano) ?? false;
     return true;
@@ -72,6 +81,7 @@ export default function GameBrowser({ games }: { games: GameMeta[] }) {
   ];
 
   const groups: { key: keyof Filters; label: string }[] = [
+    { key: "status", label: "Status" },
     { key: "plataforma", label: "Plataforma" },
     { key: "ano", label: "Ano de término" },
   ];
@@ -100,7 +110,7 @@ export default function GameBrowser({ games }: { games: GameMeta[] }) {
       <section className="summary" aria-label="Resumo">
         {stats.map((st) => (
           <div key={st.label} className="summary-card">
-            <strong>{st.value}</strong>
+            <strong>{formatNumber(st.value)}</strong>
             <span>{st.label}</span>
           </div>
         ))}
@@ -124,7 +134,7 @@ export default function GameBrowser({ games }: { games: GameMeta[] }) {
                     {g.emulator && <span className="emulator" title="Emulador">🕹️ {g.emulator}</span>}
                     <StatusBadge status={g.status} />
                     {g.finishedAt && <span>{formatDate(g.finishedAt)}</span>}
-                    {g.hours !== undefined && <span>{g.hours}h</span>}
+                    {g.hours !== undefined && <span>{formatNumber(g.hours)}h</span>}
                   </div>
                   {g.genres.length > 0 && (
                     <div className="genres">
